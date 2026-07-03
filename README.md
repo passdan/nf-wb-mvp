@@ -1,5 +1,5 @@
 # Nextflow on Workbench - Minimal working example
-Minimal pipeline test for nextflow on workbench with docker/singularity/apptainer containers.
+Minimal pipeline run for nextflow on workbench with docker containers.
 
 ## Pipeline:
 - QC with `fastqc` on 9x paired-end yeast samples (3x 3 replicates)
@@ -15,3 +15,11 @@ Minimal pipeline test for nextflow on workbench with docker/singularity/apptaine
 ```
 nextflow run main.nf -profile workbench
 ```
+
+## Outputs
+The `results` folder should contain:
+```
+results
+-- alignment
+-- fastqc
+-- fastp-logs
