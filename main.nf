@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 
 process FASTQC {
-    publishDir "results-0107/fastqc", mode: "copy"
+    publishDir "results/fastqc", mode: "copy"
 
     input:
         tuple val(ID), path(reads)
@@ -17,25 +17,21 @@ process FASTQC {
 }
 
 process FASTP {
-    publishDir "results/fastp-logs", pattern: "*.html", mode: "copy"
-
     input:
      tuple val(ID), path(reads)
 
     output:
-        tuple val(ID), path("${ID}_trim_{R1,R2}.fastq.gz"), emit: reads
-        path("${ID}-fastp.html")
+        tuple val(ID), path("${ID}_trim_{R1,R2}.fastq.gz")
 
     script:
     """
     fastp --in1 ${reads[0]} --in2 ${reads[1]} \
-          --out1 ${ID}_trim_R1.fastq.gz --out2 ${ID}_trim_R2.fastq.gz \
-          --html ${ID}-fastp.html
+          --out1 ${ID}_trim_R1.fastq.gz --out2 ${ID}_trim_R2.fastq.gz
     """
 }
 
 process SALMON_INDEX {
-    debug false
+    debug true
 
     input:
         path(transcriptome)
@@ -54,7 +50,6 @@ process SALMON_INDEX {
 
 process SALMON_QUANT {
     publishDir "results/alignment", mode: "copy"
-
     input:
         each index
         tuple val(ID), path(reads)
@@ -74,19 +69,25 @@ process SALMON_QUANT {
 }
 
 workflow {
-    params.input = "data/reads/*{1,2}.fq.gz"
-    params.transcriptome = "data/Saccharomyces_cerevisiae.R64-1-1.cdna.all.fa.gz"
+    params.input = "${baseDir}/data/reads/*{1,2}.fq.gz"
+    params.transcriptome = "${baseDir}/data/refs/Saccharomyces_cerevisiae.R64-1-1.cdna.all.fa"
+
+    log.info """\
+        T E S T   W O R K B E N C H   P I P E L I N E
+        ===================================
+        transcriptome: ${params.transcriptome}
+        reads        : ${params.input}
+        """
 
     reads_ch = channel.fromFilePairs(params.input, checkIfExists: true)
     transcriptome_ch = channel.fromPath(params.transcriptome, checkIfExists: true)
 
     // QC stages
     FASTQC(reads_ch)
-    trimmed_reads = FASTP(reads_ch).reads
+    trimmed_reads = FASTP(reads_ch)
 
     // alignment stages
     index = SALMON_INDEX(transcriptome_ch)
-
     SALMON_QUANT(index, trimmed_reads)
     
 }

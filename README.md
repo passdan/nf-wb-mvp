@@ -13,7 +13,7 @@ Minimal pipeline run for nextflow on workbench with docker containers.
 3. Run this pipleine with:
 
 ```
-nextflow run main.nf -profile workbench
+wb nextflow run main.nf -profile workbench
 ```
 
 ## Outputs
